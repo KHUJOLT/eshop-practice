@@ -1,8 +1,9 @@
 package com.eshop.khujolt.eshop_khujolt_backend.service;
 
-import com.eshop.khujolt.eshop_khujolt_backend.dto.ProductRequest;
-import com.eshop.khujolt.eshop_khujolt_backend.dto.ProductResponse;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.request.ProductRequest;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.response.ProductResponse;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Product;
+import com.eshop.khujolt.eshop_khujolt_backend.exception.ResourceNotFoundException;
 import com.eshop.khujolt.eshop_khujolt_backend.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 
@@ -19,11 +20,12 @@ public class ProductService {
 
     public ProductResponse createProduct(ProductRequest request) {
 
-        Product product = new Product(
-                request.name(),
-                request.price(),
-                request.stock()
-        );
+        Product product = new Product();
+
+        product.setName(request.name());
+        product.setDescription(request.description());
+        product.setPrice(request.price());
+        product.setStock(request.stock());
 
         Product savedProduct = productRepository.save(product);
 
@@ -41,15 +43,17 @@ public class ProductService {
         return new ProductResponse(
                 product.getId(),
                 product.getName(),
+                product.getDescription(),
                 product.getPrice(),
-                product.getStock()
+                product.getStock(),
+                product.getCreatedAt()
         );
     }
 
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         return toResponse(product);
     }
@@ -57,11 +61,12 @@ public class ProductService {
     public ProductResponse updateProduct(
             Long id,
             ProductRequest request
-    ){
+    ) {
         Product product = productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Product not found"));
+                .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
         product.setName(request.name());
+        product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStock(request.stock());
 
@@ -72,8 +77,8 @@ public class ProductService {
 
     public void deleteProduct(Long id) {
 
-        if(!productRepository.existsById(id)) {
-            throw new RuntimeException("Product not found");
+        if (!productRepository.existsById(id)) {
+            throw new ResourceNotFoundException("Product not found");
         }
 
         productRepository.deleteById(id);

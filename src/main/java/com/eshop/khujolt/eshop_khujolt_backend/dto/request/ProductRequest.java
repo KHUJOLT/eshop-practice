@@ -1,16 +1,17 @@
-package com.eshop.khujolt.eshop_khujolt_backend.dto;
+package com.eshop.khujolt.eshop_khujolt_backend.dto.request;
 
-import jakarta.validation.constraints.DecimalMin;
-import jakarta.validation.constraints.Min;
-import jakarta.validation.constraints.NotBlank;
-import jakarta.validation.constraints.NotNull;
+import jakarta.validation.constraints.*;
 
 import java.math.BigDecimal;
 
 public record ProductRequest(
 
         @NotBlank(message = "Product is required!")
+        @Size(max = 255, message = "Name cannot exceed 255 characters")
         String name,
+
+        @Size(max = 2000, message = "Description cannot exceed 2000 characters")
+        String description,
 
         @NotNull(message = "Price is required!")
         @DecimalMin(value = "0.01", message = "Price must be greater than 0!")

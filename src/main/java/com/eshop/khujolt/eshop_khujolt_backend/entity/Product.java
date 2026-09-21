@@ -3,9 +3,10 @@ package com.eshop.khujolt.eshop_khujolt_backend.entity;
 import jakarta.persistence.*;
 
 import java.math.BigDecimal;
+import java.time.LocalDateTime;
 
 @Entity
-@Table(name="products")
+@Table(name = "products")
 public class Product {
 
     @Id
@@ -15,19 +16,47 @@ public class Product {
     @Column(nullable = false)
     private String name;
 
+    private String description;
+
     @Column(nullable = false, precision = 10, scale = 2)
     private BigDecimal price;
 
     @Column(nullable = false)
     private Integer stock;
 
-    public Product() {}
+    @Column(nullable = false)
+    private LocalDateTime createdAt;
+
+    public Product() {
+    }
+
+    @PrePersist
+    protected void onCreate() {
+        createdAt = LocalDateTime.now();
+    }
 
     public Product(String name, BigDecimal price, Integer stock) {
         this.setName(name);
         this.setPrice(price);
         this.setStock(stock);
     }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public String getDescription() {
+        return description;
+    }
+
+    public void setDescription(String description) {
+        this.description = description;
+    }
+
 
     public Long getId() {
         return id;
