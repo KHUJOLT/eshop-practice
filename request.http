@@ -1,9 +1,6 @@
-POST http://localhost:8080/api/products
+POST http://localhost:8080/api/categories
 Content-Type: application/json
 
 {
-  "name": "",
-  "description": "test",
-  "price": -1354.55,
-  "stock": -67
+  "name": "Electronics"
 }

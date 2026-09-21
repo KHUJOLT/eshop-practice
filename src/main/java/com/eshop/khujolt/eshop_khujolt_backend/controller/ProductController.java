@@ -23,7 +23,7 @@ public class ProductController {
     @ResponseStatus(HttpStatus.CREATED)
     public ProductResponse createProduct(
             @Valid @RequestBody ProductRequest request
-    ){
+    ) {
         return productService.createProduct(request);
     }
 
@@ -41,7 +41,7 @@ public class ProductController {
     public ProductResponse updateProduct(
             @PathVariable Long id,
             @Valid @RequestBody ProductRequest request
-    ){
+    ) {
         return productService.updateProduct(id, request);
     }
 
