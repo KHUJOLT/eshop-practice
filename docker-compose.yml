@@ -1,0 +1,19 @@
+services:
+  postgres:
+    image: postgres:16
+    container_name: eshop-khujolt-postgres
+    restart: unless-stopped
+
+    environment:
+      POSTGRES_DB: eshop-khujolt
+      POSTGRES_USER: eshop-khujolt_user
+      POSTGRES_PASSWORD: eshop-khujolt_password
+
+    ports:
+      - "5432:5432"
+
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+volumes:
+  postgres_data:
