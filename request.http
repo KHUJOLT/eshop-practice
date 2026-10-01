@@ -1,6 +1,7 @@
-POST http://localhost:8080/api/categories
+POST localhost:8080/api/auth/login
 Content-Type: application/json
 
 {
-  "name": "Electronics"
+  "password": "password13",
+  "email": "testuser@example.com"
 }

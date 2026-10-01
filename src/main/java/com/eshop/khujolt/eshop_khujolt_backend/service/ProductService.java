@@ -2,9 +2,13 @@ package com.eshop.khujolt.eshop_khujolt_backend.service;
 
 import com.eshop.khujolt.eshop_khujolt_backend.dto.request.ProductRequest;
 import com.eshop.khujolt.eshop_khujolt_backend.dto.response.ProductResponse;
+import com.eshop.khujolt.eshop_khujolt_backend.entity.Category;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Product;
 import com.eshop.khujolt.eshop_khujolt_backend.exception.ResourceNotFoundException;
+import com.eshop.khujolt.eshop_khujolt_backend.repository.CategoryRepository;
 import com.eshop.khujolt.eshop_khujolt_backend.repository.ProductRepository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
@@ -13,12 +17,18 @@ import java.util.List;
 public class ProductService {
 
     private final ProductRepository productRepository;
+    private final CategoryRepository categoryRepository;
 
-    public ProductService(ProductRepository productRepository) {
+
+    public ProductService(ProductRepository productRepository, CategoryRepository categoryRepository) {
         this.productRepository = productRepository;
+        this.categoryRepository = categoryRepository;
     }
 
     public ProductResponse createProduct(ProductRequest request) {
+
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
         Product product = new Product();
 
@@ -26,6 +36,7 @@ public class ProductService {
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStock(request.stock());
+        product.setCategory(category);
 
         Product savedProduct = productRepository.save(product);
 
@@ -39,6 +50,34 @@ public class ProductService {
                 .toList();
     }
 
+    public Page<ProductResponse> getProducts(
+            Long categoryId,
+            String name,
+            Pageable pageable
+    ) {
+        Page<Product> products;
+
+        if (categoryId != null && name != null && !name.isBlank()) {
+
+            products = productRepository
+                    .findByCategoryIdAndNameContainingIgnoreCase(categoryId, name, pageable);
+
+        } else if (categoryId != null) {
+
+            products = productRepository.findByCategoryId(categoryId, pageable);
+
+        } else if (name != null && !name.isBlank()) {
+
+            products = productRepository.findByNameContainingIgnoreCase(name, pageable);
+
+        } else {
+
+            products = productRepository.findAll(pageable);
+        }
+
+        return products.map(this::toResponse);
+    }
+
     private ProductResponse toResponse(Product product) {
         return new ProductResponse(
                 product.getId(),
@@ -46,7 +85,9 @@ public class ProductService {
                 product.getDescription(),
                 product.getPrice(),
                 product.getStock(),
-                product.getCreatedAt()
+                product.getCreatedAt(),
+                product.getCategory().getId(),
+                product.getCategory().getName()
         );
     }
 
@@ -65,10 +106,14 @@ public class ProductService {
         Product product = productRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Product not found"));
 
+        Category category = categoryRepository.findById(request.categoryId())
+                .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
+
         product.setName(request.name());
         product.setDescription(request.description());
         product.setPrice(request.price());
         product.setStock(request.stock());
+        product.setCategory(category);
 
         Product updatedProduct = productRepository.save(product);
 
@@ -81,6 +126,12 @@ public class ProductService {
             throw new ResourceNotFoundException("Product not found");
         }
 
+        if(productRepository.existsByCategoryId(id)){
+            throw new IllegalStateException("Cannot delete category containing products");
+        }
+
         productRepository.deleteById(id);
     }
+
+
 }

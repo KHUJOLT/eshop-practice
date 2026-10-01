@@ -3,12 +3,12 @@ package com.eshop.khujolt.eshop_khujolt_backend.service;
 import com.eshop.khujolt.eshop_khujolt_backend.dto.request.CategoryRequest;
 import com.eshop.khujolt.eshop_khujolt_backend.dto.response.CategoryResponse;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Category;
+import com.eshop.khujolt.eshop_khujolt_backend.exception.DuplicateResourceException;
 import com.eshop.khujolt.eshop_khujolt_backend.exception.ResourceNotFoundException;
 import com.eshop.khujolt.eshop_khujolt_backend.repository.CategoryRepository;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 public class CategoryService {
@@ -22,6 +22,10 @@ public class CategoryService {
     public CategoryResponse createCategory(CategoryRequest request) {
 
         Category category = new Category();
+
+        if (categoryRepository.existsByNameIgnoreCase(request.name())) {
+            throw new DuplicateResourceException("Category already exists");
+        }
 
         category.setName(request.name());
 
@@ -60,6 +64,10 @@ public class CategoryService {
         Category category = categoryRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Category not found"));
 
+        if (categoryRepository.existsByNameIgnoreCase(request.name())) {
+            throw new DuplicateResourceException("Category already exists");
+        }
+
         category.setName(request.name());
 
         Category updatedCategory = categoryRepository.save(category);
@@ -69,11 +77,10 @@ public class CategoryService {
 
     public void deleteCategory(Long id) {
 
-        if(!categoryRepository.existsById(id)) {
+        if (!categoryRepository.existsById(id)) {
             throw new ResourceNotFoundException("Category not found");
         }
 
         categoryRepository.deleteById(id);
     }
 }
-//---------------------------DAY 3 STOPPED PRODUCT and CAtegory

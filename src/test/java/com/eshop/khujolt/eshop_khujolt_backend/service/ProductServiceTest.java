@@ -2,53 +2,102 @@ package com.eshop.khujolt.eshop_khujolt_backend.service;
 
 import com.eshop.khujolt.eshop_khujolt_backend.dto.request.ProductRequest;
 import com.eshop.khujolt.eshop_khujolt_backend.dto.response.ProductResponse;
+import com.eshop.khujolt.eshop_khujolt_backend.entity.Category;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Product;
+import com.eshop.khujolt.eshop_khujolt_backend.exception.ResourceNotFoundException;
+import com.eshop.khujolt.eshop_khujolt_backend.repository.CategoryRepository;
 import com.eshop.khujolt.eshop_khujolt_backend.repository.ProductRepository;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.InjectMocks;
+import org.mockito.Mock;
+import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.math.BigDecimal;
-import java.util.ArrayList;
-import java.util.List;
+import java.util.Optional;
 
-/*import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.mockito.Mockito.*;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertThrows;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 
+@ExtendWith(MockitoExtension.class)
 public class ProductServiceTest {
 
-    private final ProductRepository productRepository = mock(ProductRepository.class);
+    @Mock
+    private ProductRepository productRepository;
 
-    private final ProductService productService = new ProductService(productRepository);
+    @Mock
+    private CategoryRepository categoryRepository;
+
+    @InjectMocks
+    private ProductService productService;
 
     @Test
     void shouldCreateProduct() {
 
+        Category category = new Category();
+        category.setId(1L);
+        category.setName("Electronics");
+        System.out.println("Created category: " + category.getName());
+
         ProductRequest request = new ProductRequest(
-                "pisun",
-                new BigDecimal("228.5"),
-                10
+                "Gaming Mouse",
+                "Wireless mouse",
+                new BigDecimal("149.99"),
+                10,
+                1L
         );
 
-        Product savedProduct = new Product(
-                "pisun",
-                new BigDecimal("228.5"),
-                10
+        System.out.println("Requested: " + request.name());
+
+        when(categoryRepository.findById(1L))
+                .thenReturn(Optional.of(category));
+
+        Product product = new Product();
+
+        product.setId(1L);
+        product.setName("Gaming Mouse");
+        product.setDescription("Wireless mouse");
+        product.setPrice(new BigDecimal("149.99"));
+        product.setStock(10);
+        product.setCategory(category);
+
+        when(productRepository.save(any(Product.class)))
+                .thenReturn(product);
+
+        ProductResponse response =
+                productService.createProduct(request);
+
+        assertEquals(
+                "Gaming Mouse",
+                response.name()
         );
 
-        when(productRepository.save(any(Product.class))).thenReturn(savedProduct);
-
-        ProductResponse result = productService.createProduct(request);
-
-        assertEquals("pisun", result.name());
-        assertEquals(new BigDecimal("228.5"), result.price());
-        assertEquals(10, result.stock());
-
-        verify(productRepository).save(any(Product.class));
+        assertEquals(
+                1L,
+                response.categoryId()
+        );
     }
 
     @Test
-    void shouldGetAllProducts() {
+    void shouldThrowExceptionWhenCategoryNotFound() {
 
-        List<Product> products = new ArrayList<>();
+        ProductRequest request = new ProductRequest(
+                "Gaming Mouse",
+                "Wireless mouse",
+                new BigDecimal("149.99"),
+                10,
+                999L
+        );
+
+        when(categoryRepository.findById(999L))
+                .thenReturn(Optional.empty());
+
+        assertThrows(
+                ResourceNotFoundException.class,
+                () -> productService.createProduct(request)
+        );
     }
 }
-*/
+
