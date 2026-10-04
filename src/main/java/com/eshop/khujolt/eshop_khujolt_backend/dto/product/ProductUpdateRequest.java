@@ -14,6 +14,7 @@ public record ProductUpdateRequest(
 
         @NotNull
         @DecimalMin(value="0.01")
+        @Digits(integer = 8, fraction = 2)
         BigDecimal price,
 
         @NotNull

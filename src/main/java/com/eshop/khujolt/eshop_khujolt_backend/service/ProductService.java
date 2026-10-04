@@ -10,10 +10,12 @@ import com.eshop.khujolt.eshop_khujolt_backend.repository.ProductRepository;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.util.List;
 
 @Service
+@Transactional
 public class ProductService {
 
     private final ProductRepository productRepository;
@@ -43,6 +45,7 @@ public class ProductService {
         return toResponse(savedProduct);
     }
 
+    @Transactional(readOnly = true)
     public List<ProductResponse> getAllProducts() {
         return productRepository.findAll()
                 .stream()
@@ -50,6 +53,7 @@ public class ProductService {
                 .toList();
     }
 
+    @Transactional(readOnly = true)
     public Page<ProductResponse> getProducts(
             Long categoryId,
             String name,
@@ -91,6 +95,7 @@ public class ProductService {
         );
     }
 
+    @Transactional(readOnly = true)
     public ProductResponse getProductById(Long id) {
 
         Product product = productRepository.findById(id)
@@ -121,16 +126,11 @@ public class ProductService {
     }
 
     public void deleteProduct(Long id) {
+        Product product = productRepository.findById(id)
+                .orElseThrow(()->
+                        new ResourceNotFoundException("Product not found"));
 
-        if (!productRepository.existsById(id)) {
-            throw new ResourceNotFoundException("Product not found");
-        }
-
-        if(productRepository.existsByCategoryId(id)){
-            throw new IllegalStateException("Cannot delete category containing products");
-        }
-
-        productRepository.deleteById(id);
+        productRepository.delete(product);
     }
 
 

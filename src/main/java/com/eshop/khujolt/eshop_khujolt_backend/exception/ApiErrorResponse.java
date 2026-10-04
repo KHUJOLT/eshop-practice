@@ -1,5 +1,14 @@
 package com.eshop.khujolt.eshop_khujolt_backend.exception;
 
-public record ApiErrorResponse (int status, String message) {
+import java.time.Instant;
+import java.util.Map;
+
+public record ApiErrorResponse (
+        Instant timestamp,
+        int status,
+        String message,
+        String path,
+        Map<String, String> fieldErrors
+) {
 
 }

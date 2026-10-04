@@ -35,7 +35,7 @@ public class JwtService {
                 .claim("role", user.getRole().name())
                 .issuedAt(now)
                 .expiration(expirationDate)
-                .signWith(getSigningKey())
+                .signWith(getSigningKey(), Jwts.SIG.HS256)
                 .compact();
     }
 
