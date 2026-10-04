@@ -1,4 +1,4 @@
-package com.eshop.khujolt.eshop_khujolt_backend.dto.response;
+package com.eshop.khujolt.eshop_khujolt_backend.dto.product;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;

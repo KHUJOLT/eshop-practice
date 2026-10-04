@@ -1,4 +1,4 @@
-package com.eshop.khujolt.eshop_khujolt_backend.dto.request;
+package com.eshop.khujolt.eshop_khujolt_backend.dto.product;
 
 import jakarta.validation.constraints.*;
 
@@ -22,6 +22,7 @@ public record ProductRequest(
         Integer stock,
 
         @NotNull(message = "Category is required")
+        @Positive
         Long categoryId
 ) {
 }

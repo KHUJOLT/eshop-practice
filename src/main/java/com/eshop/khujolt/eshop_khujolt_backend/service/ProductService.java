@@ -1,7 +1,7 @@
 package com.eshop.khujolt.eshop_khujolt_backend.service;
 
-import com.eshop.khujolt.eshop_khujolt_backend.dto.request.ProductRequest;
-import com.eshop.khujolt.eshop_khujolt_backend.dto.response.ProductResponse;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.product.ProductRequest;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.product.ProductResponse;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Category;
 import com.eshop.khujolt.eshop_khujolt_backend.entity.Product;
 import com.eshop.khujolt.eshop_khujolt_backend.exception.ResourceNotFoundException;

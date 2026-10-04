@@ -1,7 +1,7 @@
 package com.eshop.khujolt.eshop_khujolt_backend.controller;
 
-import com.eshop.khujolt.eshop_khujolt_backend.dto.request.ProductRequest;
-import com.eshop.khujolt.eshop_khujolt_backend.dto.response.ProductResponse;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.product.ProductRequest;
+import com.eshop.khujolt.eshop_khujolt_backend.dto.product.ProductResponse;
 import com.eshop.khujolt.eshop_khujolt_backend.service.ProductService;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
