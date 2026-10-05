@@ -5,6 +5,8 @@ target/
 !**/src/test/**/target/
 request.http
 tokens.json
+.env
+*.dump
 
 ### STS ###
 .apt_generated
