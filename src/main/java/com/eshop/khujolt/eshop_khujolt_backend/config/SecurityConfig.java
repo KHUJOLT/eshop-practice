@@ -76,6 +76,8 @@ public class SecurityConfig {
                                 "/api/products/**"
                         ).hasRole("ADMIN")
 
+                        .requestMatchers("/", "/index.html", "/error").permitAll()
+
                         .anyRequest().authenticated()
                 )
                 .oauth2ResourceServer(oauth2 -> oauth2
