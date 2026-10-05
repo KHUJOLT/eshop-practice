@@ -4,39 +4,33 @@ A learning project implementing an online store backend with Java and Spring Boo
 
 ## Tech Stack
 
-- Java 21
-- Spring Boot 4.1.1
+- Java 21 and Spring Boot 4.1.1
 - Spring Security with JWT authentication
 - Spring Data JPA
-- PostgreSQL 16
-- Flyway
+- PostgreSQL 16 and Flyway
 - Docker Compose
-- JUnit and Mockito
-- Maven Wrapper
+- JUnit, Mockito, and Maven Wrapper
 
 ## Features
 
-- User registration and login
-- BCrypt password hashing
-- JWT authentication
+- User registration and login with BCrypt password hashing
 - Role-based access control: USER and ADMIN
 - Product and category CRUD
-- Product filtering by name and category
-- Pagination and sorting
-- Request validation
-- Consistent API error responses
+- Product filtering by name and category, pagination, and sorting
+- Request validation and consistent API error responses
 - Versioned database migrations
+- Persistent shopping cart for each authenticated user
+- Stock validation and cart totals calculated using current prices
+- Browser interface for API testing and basic store management
 
 ## Requirements
 
 - JDK 21
 - Docker with Docker Compose
 
-A separate Maven installation is not required.
+A separate Maven installation is not required. Run commands below from the project root in PowerShell.
 
 ## Local Setup
-
-Run the following commands from the project root.
 
 ### 1. Start PostgreSQL
 
@@ -44,18 +38,16 @@ Run the following commands from the project root.
 docker compose up -d
 ```
 
-The database is available at `localhost:5432`.
+PostgreSQL is available at `localhost:5432`.
 
 ### 2. Configure Environment Variables
 
-Set these variables in your application run configuration:
-
 | Variable | Description |
 |---|---|
-| `DB_PASSWORD` | Password matching the PostgreSQL container configuration |
+| `DB_PASSWORD` | Password matching the local PostgreSQL container configuration |
 | `JWT_SECRET` | Base64-encoded random signing key containing 32 bytes |
 
-Optional variables:
+Optional development settings:
 
 | Variable | Default |
 |---|---|
@@ -66,7 +58,7 @@ Optional variables:
 
 In IntelliJ IDEA, open **Run → Edit Configurations → Environment variables**.
 
-Generate a JWT signing key in PowerShell:
+Generate a signing key in PowerShell:
 
 ```powershell
 $key = New-Object byte[] 32
@@ -80,9 +72,7 @@ Use the generated value as `JWT_SECRET`.
 
 ### 3. Start the Application
 
-Run `EshopKhujoltBackendApplication` in IntelliJ IDEA.
-
-Alternatively, set the environment variables in PowerShell and run:
+Run `EshopKhujoltBackendApplication` in IntelliJ IDEA, or use PowerShell:
 
 ```powershell
 $env:DB_PASSWORD = Read-Host "Local database password"
@@ -90,15 +80,13 @@ $env:JWT_SECRET = Read-Host "JWT signing key"
 .\mvnw.cmd spring-boot:run
 ```
 
-The default profile is `dev`.
-
-API base URL:
+The default profile is `dev`. The API and browser interface are available at:
 
 ```text
-http://localhost:8080
+http://localhost:8080/
 ```
 
-Flyway applies database migrations at startup. Hibernate validates the resulting schema using `ddl-auto=validate`.
+Flyway applies migrations at startup. Hibernate validates the schema using `ddl-auto=validate`.
 
 ## Profiles
 
@@ -108,43 +96,52 @@ Flyway applies database migrations at startup. Hibernate validates the resulting
 | `test` | Spring tests using a separate database |
 | `prod` | Deployment with database credentials supplied through environment variables |
 
-Activate the production profile with:
+Activate production with `SPRING_PROFILES_ACTIVE=prod`. Required variables are `DB_URL`, `DB_USERNAME`, `DB_PASSWORD`, and `JWT_SECRET`.
 
-```text
-SPRING_PROFILES_ACTIVE=prod
-```
+Docker Compose is started manually; automatic Compose integration is disabled in the application configuration.
 
-The `prod` profile requires:
+## Browser Interface
 
-- `DB_URL`
-- `DB_USERNAME`
-- `DB_PASSWORD`
-- `JWT_SECRET`
+Open `http://localhost:8080/` with the application running.
 
-Docker Compose is started manually and is disabled within the application configuration.
+The interface supports registration, login, product browsing and search, shopping cart management, ADMIN product and category management, and inspection of API responses.
+
+The page is located at `src/main/resources/static/index.html`.
+
+Spring Security must allow public access to `/` and `/index.html`. Protected API endpoints still require authentication.
+
+The JWT is stored in memory within the browser tab. Reloading the page requires logging in again. When served by the same application, the interface requires no separate frontend server or CORS configuration.
 
 ## Testing
 
-Start PostgreSQL before running tests.
+### Shopping Cart Unit Tests
 
-Create the test database once:
+```powershell
+.\mvnw.cmd "-Dtest=CartServiceTest" test
+```
+
+These Mockito tests do not require PostgreSQL or a Spring context. They verify that repeated additions increase quantity and recalculate totals, and that requests exceeding stock leave the existing quantity unchanged.
+
+Database locking and HTTP authentication require separate integration tests.
+
+### Full Test Suite
+
+Start PostgreSQL and create the test database once:
 
 ```powershell
 docker exec eshop-khujolt-postgres createdb -U eshop-khujolt_user eshop-khujolt-test
 ```
 
-Set its password and run the tests:
+If it already exists, skip creation. Then run:
 
 ```powershell
 $env:TEST_DB_PASSWORD = Read-Host "Test database password"
 .\mvnw.cmd test
 ```
 
-Spring context tests activate the `test` profile. Mockito unit tests do not require a database.
+Spring context tests activate the `test` profile. The test profile uses a fixed signing key exclusively for testing.
 
-The test profile uses a fixed signing key exclusively for testing.
-
-Environment variables configured for the application in IntelliJ IDEA are not automatically available in terminal sessions or separate test run configurations.
+Environment variables configured for the application in IntelliJ are not automatically available in terminal sessions or separate test run configurations.
 
 ## Build
 
@@ -154,7 +151,7 @@ With PostgreSQL running and `TEST_DB_PASSWORD` configured:
 .\mvnw.cmd package
 ```
 
-This command runs the tests and creates the executable JAR in `target/`.
+This runs the tests and creates the executable JAR in `target/`.
 
 ## API Endpoints
 
@@ -177,7 +174,7 @@ New users receive the `USER` role.
 | PUT | `/api/products/{id}` | ADMIN |
 | DELETE | `/api/products/{id}` | ADMIN |
 
-Example query with filtering, pagination, and sorting:
+Example filtering, pagination, and sorting:
 
 ```text
 GET /api/products?categoryId=1&name=mouse&page=0&size=5&sort=price,asc
@@ -197,6 +194,43 @@ Page numbering starts at `0`.
 
 Categories containing products cannot be deleted.
 
+### Shopping Cart
+
+All cart endpoints require authentication. The current user is identified from the JWT subject; requests do not accept a user ID.
+
+| Method | Endpoint | Description |
+|---|---|---|
+| GET | `/api/cart` | Retrieve the current user's cart |
+| POST | `/api/cart/items` | Add a product or increase its quantity |
+| PUT | `/api/cart/items/{productId}` | Set the product quantity |
+| DELETE | `/api/cart/items/{productId}` | Remove a product |
+| DELETE | `/api/cart` | Clear the cart |
+
+Add an item:
+
+```json
+{
+  "productId": 1,
+  "quantity": 2
+}
+```
+
+Update its quantity:
+
+```json
+{
+  "quantity": 3
+}
+```
+
+Quantities must be between 1 and 999. Repeated additions increase the existing quantity; PUT replaces it.
+
+Cart changes validate quantities against current stock. The cart does not reserve stock. Prices and totals use current product prices. If stock drops below the quantity already in the cart, its item response reports `available: false`.
+
+Each user has an independent cart that persists across application restarts. Clearing an empty cart returns `204 No Content`.
+
+Deleting a product referenced by a cart is currently blocked by a foreign key constraint.
+
 ### Admin
 
 | Method | Endpoint | Access |
@@ -211,31 +245,25 @@ Log in through `/api/auth/login` and include the returned token in protected req
 Authorization: Bearer <token>
 ```
 
-Roles are stored in the JWT when it is issued. After changing a user's role in the database, log in again to obtain a new token.
-
-Changing the signing key invalidates previously issued tokens.
+Roles are stored in the JWT when it is issued. After changing a user's role in the database, log in again to obtain a new token. Changing the signing key invalidates previously issued tokens.
 
 ## Database Migrations
 
-Migration files are located in:
-
-```text
-src/main/resources/db/migration
-```
-
-Current migrations:
+Migration files are located in `src/main/resources/db/migration`.
 
 | Migration | Purpose |
 |---|---|
 | `V1__initial_schema.sql` | Create users, categories, and products |
 | `V2__add_product_constraints.sql` | Require product categories, validate prices and stock, and index category references |
+| `V3__add_cart_tables.sql` | Create carts and cart items with ownership, quantity, and uniqueness constraints |
 
-New databases execute both migrations automatically.
+New databases execute all migrations automatically.
 
 An existing database matching the V1 schema requires a one-time baseline at version `1`. After verifying the database connection, schema, and backup, temporarily enable:
 
 ```properties
 spring.flyway.baseline-on-migrate=true
+spring.flyway.baseline-version=1
 ```
 
 After successful initialization, restore:
@@ -248,18 +276,16 @@ Do not modify migrations that have already been applied. Add subsequent schema c
 
 ## Configuration and Secrets
 
-Do not commit real passwords, JWT signing keys, or database backups.
+Do not commit real passwords, JWT signing keys, or database backups. Docker Compose credentials are intended for local development; use separate credentials for deployment.
 
-The repository's Docker Compose credentials are intended for local development. Use separate credentials for deployment.
-
-A `.env` file is not automatically loaded by the Spring Boot application. Supply application variables through the shell, IDE, or deployment environment.
+A `.env` file is not automatically loaded by Spring Boot. Supply application variables through the shell, IDE, or deployment environment.
 
 ## Roadmap
 
-- Shopping cart
 - Order placement and order history
 - Transactional stock management
+- Product deactivation instead of physical deletion
 - PostgreSQL integration tests with Testcontainers
 - Continuous integration
 - API documentation
-- Storefront and administration interface
+- Further storefront and administration interface improvements
